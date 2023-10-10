@@ -11,27 +11,26 @@ from dagster import (
 import base64
 from io import BytesIO
 import matplotlib.pyplot as plt
-from typing import Dict, List  # add imports to the top of `assets.py`
+from typing import Dict, List  
 
 
 @asset
-def topstory_ids() -> List:  # modify return type signature
+def topstory_ids() -> List:  
+    
     newstories_url = "https://hacker-news.firebaseio.com/v0/topstories.json"
     top_new_story_ids = requests.get(newstories_url).json()[:100]
 
     return (
-        top_new_story_ids  # return top_new_story_ids and the I/O manager will save it
+        top_new_story_ids 
     )
 
 
-@asset  # remove deps parameter
-def topstories(
-    context: AssetExecutionContext,
-    topstory_ids: List,  # add topstory_ids as a function argument
-) -> pd.DataFrame:  # modify the return type signature
+@asset(
+    group_name="hackernews", # Assets can be grouped
+    io_manager_key="database_io_manager",  # Addition: `io_manager_key` specified
+)
+def topstories(context: AssetExecutionContext, topstory_ids: List) -> pd.DataFrame:
     logger = get_dagster_logger()
-
-    # remove manually loading topstory_ids
 
     results = []
     for item_id in topstory_ids:
@@ -45,8 +44,6 @@ def topstories(
 
     df = pd.DataFrame(results)
 
-    # remove manually saving df
-
     context.add_output_metadata(
         metadata={
             "num_records": len(df),
@@ -54,7 +51,7 @@ def topstories(
         }
     )
 
-    return df  # return df and the I/O manager will save it
+    return df
 
 
 @asset  # remove deps parameter
