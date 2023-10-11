@@ -7,9 +7,11 @@ from dagster import (
     FilesystemIOManager,  
 )
 
-from dagster_duckdb_pandas import DuckDBPandasIOManager # Adding IO Manager from library
+from dagster_duckdb_pandas import DuckDBPandasIOManager 
 
 from . import assets
+
+from .resources import DataGeneratorResource
 
 all_assets = load_assets_from_modules([assets])
 
@@ -26,11 +28,14 @@ file_io_manager = FilesystemIOManager(
 
 database_io_manager = DuckDBPandasIOManager(database="analytics.hackernews.duckdb") # instantiate IO Manager
 
+datagen = DataGeneratorResource(num_days=365)  # Make the resource
+
 defs = Definitions(
     assets=all_assets,
     schedules=[hackernews_schedule],
     resources={
         "io_manager": file_io_manager,
-        "database_io_manager": database_io_manager,  # Define the I/O manager here (to be referenced in asset definitions)
+        "database_io_manager": database_io_manager,  
+        "hackernews_api": datagen,  # Add the newly-made resource here
     },
 )
